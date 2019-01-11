@@ -23,3 +23,10 @@ First-Time Installation:
   - From here, you can Run that script
   - **Pro tip:** before running the script, you can also create a shortcut for that action, so that you can skip the installation going forward. Choose a keyboard shortcut of your liking.
     - One important note: make sure that the **Automatically close window on key/MIDI input** checkbox is *not* checked!
+
+License:
+--------
+Region Playlists is free software distributed under the terms of the MIT license reproduced [here](LICENSE.txt).
+It may be used for any purpose, including commercial purposes, at absolutely no cost.
+No paperwork, no royalties, no GNU-like "copyleft" restrictions, either.
+Just download it and use it. Region Playlists is provided for free, with no warranties or limitations.

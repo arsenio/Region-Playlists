@@ -1,4 +1,4 @@
--- Test
+-- Region Playlists
 
 local r = reaper
 
