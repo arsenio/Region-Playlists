@@ -16,7 +16,8 @@ if not lib_path or lib_path == "" then
 end
 loadfile(lib_path .. "Core.lua")()
 
-local handler_select, handler_new, handler_delete = ...
+local handler_select, handler_new, handler_delete,
+      handler_play, handler_stop = ...
 
 
 GUI.req("Classes/Class - Menubox.lua")()
@@ -133,10 +134,11 @@ GUI.New("Play", "Button", {
   caption = "Play",
   font = 2,
   col_txt = "txt",
-  col_fill = "elm_frame"
+  col_fill = "elm_frame",
+  func = handler_play
 })
 
-GUI.New("PauseStop", "Button", {
+GUI.New("Stop", "Button", {
   z = 11,
   x = 278,
   y = 310,
@@ -145,7 +147,8 @@ GUI.New("PauseStop", "Button", {
   caption = "Stop",
   font = 2,
   col_txt = "txt",
-  col_fill = "elm_frame"
+  col_fill = "elm_frame",
+  func = handler_stop
 })
 
 GUI.Init()
