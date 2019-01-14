@@ -17,6 +17,7 @@ end
 loadfile(lib_path .. "Core.lua")()
 
 local handler_select, handler_new, handler_delete,
+      handler_add,
       handler_play, handler_stop = ...
 
 
@@ -98,7 +99,12 @@ GUI.New("PlaylistNew", "Button", {
     local name = ""
     retval, name = reaper.GetUserInputs("New playlist", 1, "Playlist name,extrawidth=250", "")
     if retval then
-      name = util.trim(name:gsub(",", " "))
+      --[[
+        We like commas in our playlist and region names. But commas are
+        used as delimiters in strings. Unicode fullwidth commas to the
+        rescue! (Is it hacky? Hush your mouth.)
+      ]]--
+      name = util.trim(name:gsub(",", "，"))
       if not util.is_empty(name) then
         handler_new(name)
       end
@@ -150,7 +156,8 @@ GUI.New("ItemAdd", "Button", {
   caption = "Add",
   font = 3,
   col_txt = "elm_frame",
-  col_fill = "wnd_bg"
+  col_fill = "wnd_bg",
+  func = handler_add
 })
 
 GUI.New("ItemDelete", "Button", {

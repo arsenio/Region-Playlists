@@ -17,8 +17,16 @@ function handlers.select(selected)
   reaper.SetProjExtState(project, ext, "selected", selected)
   if selected and not util.is_empty(util.trim(GUI.elms.PlaylistSelector.optarray[GUI.Val("PlaylistSelector")])) then
     GUI.elms.PlaylistDelete:enable()
+    GUI.elms.ItemAdd:enable()
+    GUI.elms.ItemDelete:disable()
+    GUI.elms.ItemUp:disable()
+    GUI.elms.ItemDown:disable()
   else
     GUI.elms.PlaylistDelete:disable()
+    GUI.elms.ItemAdd:disable()
+    GUI.elms.ItemDelete:disable()
+    GUI.elms.ItemUp:disable()
+    GUI.elms.ItemDown:disable()
   end
 end
 
@@ -67,6 +75,36 @@ function handlers.delete(selected)
   end
 end
 
+function handlers.add()
+  local options = "Add a pause|"
+  local regions = {}
+  local marker_count = reaper.CountProjectMarkers(0)
+  for index=0, marker_count - 1 do
+    local retval, is_region, start, stop, name, region_id = reaper.EnumProjectMarkers(index)
+    if is_region then
+      name = util.trim(name:gsub(",", "，")) -- See comma comment in gui.lua
+      table.insert(regions, name)
+    end
+  end
+  for index,region in ipairs(regions) do
+    options = options .. "|" .. region
+  end
+
+  local selected = gfx.showmenu(options)
+  if selected then
+    list = GUI.elms.Items.list
+    selected = math.floor(selected)
+    if selected == 1 then
+      table.insert(list, "-- Pause --")
+    else
+      table.insert(list, regions[selected - 1]) -- offset due to "Pause"
+    end
+    GUI.elms.Items.list = list
+    GUI.elms.Items:init()
+    GUI.elms.Items:redraw()
+  end
+end
+
 function handlers.play()
   play_state = reaper.GetPlayState()
   if play_state == 1 then -- "Playing"
@@ -75,19 +113,8 @@ function handlers.play()
     return
   end
 
-  last_region_index = 1
-  regions = {}
-  local marker_count = reaper.CountProjectMarkers(0)
-  for index=0, marker_count - 1 do
-    local retval, isrgn, pos, rgnend, name, markrgnindexnumber = reaper.EnumProjectMarkers(index)
-    if isrgn then
-      last_region_index = markrgnindexnumber
-      table.insert(regions, name .. " (" .. pos .. " -> " .. rgnend .. ")")
-    end
-  end
-
   if play_state == 0 then -- "Stopped"
-    reaper.GoToRegion(project, last_region_index, false)
+    reaper.GoToRegion(project, 1, false)
   end
 
   GUI.elms.Play.caption = "Pause"

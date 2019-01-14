@@ -74,5 +74,6 @@ end
 
 local manager = assert(loadfile(root .. "include/gui.lua"))
 manager(handlers.select, handlers.new, handlers.delete,
+        handlers.add,
         handlers.play, handlers.stop)
 update_playlists()
