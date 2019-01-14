@@ -52,18 +52,24 @@ function update_playlists()
   if #playlists > 0 then
     GUI.elms.PlaylistSelector.optarray = playlists
   else
-    GUI.elms.PlaylistSelector.opts = ""
+    GUI.elms.PlaylistSelector.optarray = {" "}
   end
+  GUI.elms.PlaylistSelector:draw()
 
   retval, str_value = reaper.GetProjExtState(project, ext, "selected")
+  handlers.select(str_value)
+--[[
   if util.is_empty(str_value) then
-    GUI.Val("PlaylistSelector", -1)
-    GUI.elms_hide[GUI.elms.PlaylistDelete.z] = true
+    GUI.Val("PlaylistSelector", 1)
+    GUI.elms.PlaylistDelete:disable()
   else
     selected = tonumber(str_value)
     GUI.Val("PlaylistSelector", selected)
-    GUI.elms_hide[GUI.elms.PlaylistDelete.z] = false
+    GUI.elms.PlaylistDelete:enable()
   end
+--]]
+  GUI.elms.PlaylistSelector:init()
+  GUI.elms.PlaylistSelector:redraw()
 end
 
 local manager = assert(loadfile(root .. "include/gui.lua"))

@@ -14,6 +14,9 @@ function util.is_empty(s)
 end
 
 function util.trim(s)
+  if util.is_empty(s) then
+    return ""
+  end
   return (s:gsub("^%s*(.-)%s*$", "%1"))
 end
 

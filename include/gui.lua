@@ -59,9 +59,9 @@ function GUI.elms.PlaylistSelector:onmouseup()
   if selected then
     val = util.trim(GUI.elms.PlaylistSelector.optarray[selected])
     if util.is_empty(val) then
-      GUI.elms_hide[GUI.elms.PlaylistDelete.z] = true
+      GUI.elms.PlaylistDelete:disable()
     else
-      GUI.elms_hide[GUI.elms.PlaylistDelete.z] = false
+      GUI.elms.PlaylistDelete:enable()
     end
     handler_select(selected)
   end
@@ -97,14 +97,27 @@ GUI.New("PlaylistDelete", "Button", {
   h = 24,
   caption = "Delete",
   font = 3,
-  col_txt = "txt",
-  col_fill = "elm_frame",
+  col_txt = "elm_frame",
+  col_fill = "wnd_bg",
   func = function()
     selected = GUI.Val("PlaylistSelector")
     handler_delete(selected)
   end
 })
-GUI.elms_hide[GUI.elms.PlaylistDelete.z] = true
+function GUI.elms.PlaylistDelete:enable()
+  GUI.elms.PlaylistDelete.col_txt = "txt"
+  GUI.elms.PlaylistDelete.col_fill = "elm_frame"
+  GUI.elms_freeze[GUI.elms.PlaylistDelete.z] = false
+  self:init()
+  self:redraw()
+end
+function GUI.elms.PlaylistDelete:disable()
+  GUI.elms.PlaylistDelete.col_txt = "elm_frame"
+  GUI.elms.PlaylistDelete.col_fill = "wnd_bg"
+  GUI.elms_freeze[GUI.elms.PlaylistDelete.z] = true
+  self:init()
+  self:redraw()
+end
 
 GUI.New("Items", "Listbox", {
   z = 11,

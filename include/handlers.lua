@@ -15,6 +15,11 @@ regions = {}
 
 function handlers.select(selected)
   reaper.SetProjExtState(project, ext, "selected", selected)
+  if selected and not util.is_empty(util.trim(GUI.elms.PlaylistSelector.optarray[GUI.Val("PlaylistSelector")])) then
+    GUI.elms.PlaylistDelete:enable()
+  else
+    GUI.elms.PlaylistDelete:disable()
+  end
 end
 
 function handlers.new(name)
@@ -34,7 +39,9 @@ function handlers.new(name)
   reaper.SetProjExtState(project, ext, "playlists", table.concat(playlists, ","))
 
   GUI.Val("PlaylistSelector", #playlists)
-  reaper.SetProjExtState(project, ext, "selected", #playlists)
+  GUI.elms.PlaylistSelector:init()
+  GUI.elms.PlaylistSelector:redraw()
+  handlers.select(#playlists)
   update_playlists()
 end
 
@@ -42,19 +49,20 @@ function handlers.delete(selected)
   local playlists = {}
   retval, str_value = reaper.GetProjExtState(project, ext, "playlists")
   if not util.is_empty(str_value) then
-reaper.ShowConsoleMsg("Stored playlists = " .. str_value .. "\n")
     playlists = util.split(str_value, ",")
-reaper.ShowConsoleMsg("Removing " .. selected .. " from " .. table.concat(playlists, ",")  .. "\n")
   end
 
   id = table.remove(playlists, selected)
   if not util.is_empty(id) then
     reaper.SetProjExtState(project, ext, id .. "_name", "")
-    reaper.SetProjExtState(project, ext, "playlists", table.concat(playlists, ","))
+    if #playlists then
+      reaper.SetProjExtState(project, ext, "playlists", table.concat(playlists, ","))
+    else
+      reaper.SetProjExtState(project, ext, "playlists", "")
+    end
 
-    GUI.Val("PlaylistSelector", -1)
-    reaper.SetProjExtState(project, ext, "selected", "")
-
+--    reaper.SetProjExtState(project, ext, "selected", "")
+    GUI.Val("PlaylistSelector", 1)
     update_playlists()
   end
 end
