@@ -30,6 +30,23 @@ GUI.req("Classes/Class - Window.lua")()
 if missing_lib then return 0 end
 
 
+-- Let's add generic enable and disable methods to buttons
+function GUI.Button:enable()
+  self.col_txt = "txt"
+  self.col_fill = "elm_frame"
+  GUI.elms_freeze[self.z] = false
+  self:init()
+  self:redraw()
+end
+function GUI.Button:disable()
+  self.col_txt = "elm_frame"
+  self.col_fill = "wnd_bg"
+  GUI.elms_freeze[self.z] = true
+  self:init()
+  self:redraw()
+end
+
+-- And now, our actual GUI
 GUI.name = "Region Playlists"
 GUI.x, GUI.y, GUI.w, GUI.h = 0, 0, 600, 400
 GUI.anchor, GUI.corner = "mouse", "C"
@@ -104,20 +121,6 @@ GUI.New("PlaylistDelete", "Button", {
     handler_delete(selected)
   end
 })
-function GUI.elms.PlaylistDelete:enable()
-  GUI.elms.PlaylistDelete.col_txt = "txt"
-  GUI.elms.PlaylistDelete.col_fill = "elm_frame"
-  GUI.elms_freeze[GUI.elms.PlaylistDelete.z] = false
-  self:init()
-  self:redraw()
-end
-function GUI.elms.PlaylistDelete:disable()
-  GUI.elms.PlaylistDelete.col_txt = "elm_frame"
-  GUI.elms.PlaylistDelete.col_fill = "wnd_bg"
-  GUI.elms_freeze[GUI.elms.PlaylistDelete.z] = true
-  self:init()
-  self:redraw()
-end
 
 GUI.New("Items", "Listbox", {
   z = 11,
@@ -136,6 +139,53 @@ GUI.New("Items", "Listbox", {
   cap_bg = "wnd_bg",
   shadow = true,
   pad = 4
+})
+
+GUI.New("ItemAdd", "Button", {
+  z = 13,
+  x = 466,
+  y = 268,
+  w = 48,
+  h = 24,
+  caption = "Add",
+  font = 3,
+  col_txt = "elm_frame",
+  col_fill = "wnd_bg"
+})
+
+GUI.New("ItemDelete", "Button", {
+  z = 14,
+  x = 530,
+  y = 268,
+  w = 48,
+  h = 24,
+  caption = "Delete",
+  font = 3,
+  col_txt = "elm_frame",
+  col_fill = "wnd_bg"
+})
+
+GUI.New("ItemUp", "Button", {
+  z = 14,
+  x = 466,
+  y = 140,
+  w = 24,
+  h = 24,
+  caption = "↑",
+  font = 3,
+  col_txt = "elm_frame",
+  col_fill = "wnd_bg"
+})
+GUI.New("ItemDown", "Button", {
+  z = 14,
+  x = 466,
+  y = 174,
+  w = 24,
+  h = 24,
+  caption = "↓",
+  font = 3,
+  col_txt = "elm_frame",
+  col_fill = "wnd_bg"
 })
 
 GUI.New("Play", "Button", {
