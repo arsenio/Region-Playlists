@@ -13,24 +13,38 @@ local util = require(root .. "include.util")
 ext = "Region Playlists"
 regions = {}
 
-function handlers.select(selected)
+function handlers.playlist_select(selected)
+  selected = tonumber(selected)
+  playlist_id = nil
   reaper.SetProjExtState(project, ext, "selected", selected)
-  if selected and not util.is_empty(util.trim(GUI.elms.PlaylistSelector.optarray[GUI.Val("PlaylistSelector")])) then
-    GUI.elms.PlaylistDelete:enable()
-    GUI.elms.ItemAdd:enable()
-    GUI.elms.ItemDelete:disable()
-    GUI.elms.ItemUp:disable()
-    GUI.elms.ItemDown:disable()
-  else
-    GUI.elms.PlaylistDelete:disable()
-    GUI.elms.ItemAdd:disable()
-    GUI.elms.ItemDelete:disable()
-    GUI.elms.ItemUp:disable()
-    GUI.elms.ItemDown:disable()
+  if selected then
+    local playlist_name = util.trim(GUI.elms.PlaylistSelector.optarray[GUI.Val("PlaylistSelector")])
+    if not util.is_empty(playlist_name) then
+      retval, str_value = reaper.GetProjExtState(project, ext, "playlists")
+      if not util.is_empty(str_value) then
+        local playlist_ids = util.split(str_value, ",")
+        playlist_id = playlist_ids[selected]
+      end
+
+      GUI.elms.PlaylistDelete:enable()
+      GUI.elms.ItemAdd:enable()
+      GUI.elms.ItemDelete:disable()
+      GUI.elms.ItemUp:disable()
+      GUI.elms.ItemDown:disable()
+      update_items()
+      return
+    end
   end
+
+  GUI.elms.PlaylistDelete:disable()
+  GUI.elms.ItemAdd:disable()
+  GUI.elms.ItemDelete:disable()
+  GUI.elms.ItemUp:disable()
+  GUI.elms.ItemDown:disable()
+  update_items()
 end
 
-function handlers.new(name)
+function handlers.playlist_new(name)
   local id = util.uuid()
   reaper.SetProjExtState(project, ext, id .. "_name", name)
 
@@ -49,11 +63,12 @@ function handlers.new(name)
   GUI.Val("PlaylistSelector", #playlists)
   GUI.elms.PlaylistSelector:init()
   GUI.elms.PlaylistSelector:redraw()
-  handlers.select(#playlists)
+  handlers.playlist_select(#playlists)
   update_playlists()
+  update_items()
 end
 
-function handlers.delete(selected)
+function handlers.playlist_delete(selected)
   local playlists = {}
   retval, str_value = reaper.GetProjExtState(project, ext, "playlists")
   if not util.is_empty(str_value) then
@@ -72,18 +87,21 @@ function handlers.delete(selected)
 --    reaper.SetProjExtState(project, ext, "selected", "")
     GUI.Val("PlaylistSelector", 1)
     update_playlists()
+    update_items()
   end
 end
 
-function handlers.add()
+function handlers.item_add()
   local options = "Add a pause|"
   local regions = {}
-  local marker_count = reaper.CountProjectMarkers(0)
+  local ids = {}
+  local marker_count = reaper.CountProjectMarkers(project)
   for index=0, marker_count - 1 do
     local retval, is_region, start, stop, name, region_id = reaper.EnumProjectMarkers(index)
     if is_region then
       name = util.trim(name:gsub(",", "，")) -- See comma comment in gui.lua
       table.insert(regions, name)
+      table.insert(ids, region_id)
     end
   end
   for index,region in ipairs(regions) do
@@ -92,16 +110,53 @@ function handlers.add()
 
   local selected = gfx.showmenu(options)
   if selected then
+    retval, str_value = reaper.GetProjExtState(project, ext, playlist_id .. "_items")
+    local items = {}
+    if not util.is_empty(str_value) then
+      items = util.split(str_value, ",")
+    end
+
     list = GUI.elms.Items.list
     selected = math.floor(selected)
     if selected == 1 then
       table.insert(list, "-- Pause --")
+      table.insert(items, "P")
     else
       table.insert(list, regions[selected - 1]) -- offset due to "Pause"
+      table.insert(items, ids[selected - 1]) -- offset due to "Pause"
     end
+
+    reaper.SetProjExtState(project, ext, playlist_id .. "_items", table.concat(items, ","))
     GUI.elms.Items.list = list
     GUI.elms.Items:init()
     GUI.elms.Items:redraw()
+    update_items()
+  end
+end
+
+function handlers.item_delete(selected)
+  retval, str_value = reaper.GetProjExtState(project, ext, playlist_id .. "_items")
+  if not util.is_empty(str_value) then
+    local old_items = util.split(str_value, ",")
+    local old_list = GUI.elms.Items.list
+    local new_items = {}
+    local new_list = {}
+    local falses = {}
+    for index,item in ipairs(old_list) do
+      if index ~= selected then
+        table.insert(new_list, item)
+        table.insert(new_items, old_items[index])
+        table.insert(falses, false)
+      end
+    end
+
+    reaper.SetProjExtState(project, ext, playlist_id .. "_items", table.concat(new_items, ","))
+    GUI.elms.Items.list = new_list
+    GUI.Val("Items", falses)
+    GUI.elms.Items:init()
+    GUI.elms.Items:redraw()
+    GUI.elms.ItemDelete:disable()
+    update_items()
   end
 end
 

@@ -16,8 +16,8 @@ if not lib_path or lib_path == "" then
 end
 loadfile(lib_path .. "Core.lua")()
 
-local handler_select, handler_new, handler_delete,
-      handler_add,
+local handler_playlist_select, handler_playlist_new, handler_playlist_delete,
+      handler_item_add, handler_item_delete,
       handler_play, handler_stop = ...
 
 
@@ -73,15 +73,15 @@ GUI.New("PlaylistSelector", "Menubox", {
 
 function GUI.elms.PlaylistSelector:onmouseup()
   GUI.Menubox.onmouseup(self)
-  selected = GUI.Val("PlaylistSelector")
+  local selected = GUI.Val("PlaylistSelector")
   if selected then
-    val = util.trim(GUI.elms.PlaylistSelector.optarray[selected])
+    local val = util.trim(GUI.elms.PlaylistSelector.optarray[selected])
     if util.is_empty(val) then
       GUI.elms.PlaylistDelete:disable()
     else
       GUI.elms.PlaylistDelete:enable()
     end
-    handler_select(selected)
+    handler_playlist_select(selected)
   end
 end
 
@@ -97,7 +97,7 @@ GUI.New("PlaylistNew", "Button", {
   col_fill = "elm_frame",
   func = function()
     local name = ""
-    retval, name = reaper.GetUserInputs("New playlist", 1, "Playlist name,extrawidth=250", "")
+    local retval, name = reaper.GetUserInputs("New playlist", 1, "Playlist name,extrawidth=250", "")
     if retval then
       --[[
         We like commas in our playlist and region names. But commas are
@@ -106,7 +106,7 @@ GUI.New("PlaylistNew", "Button", {
       ]]--
       name = util.trim(name:gsub(",", "，"))
       if not util.is_empty(name) then
-        handler_new(name)
+        handler_playlist_new(name)
       end
     end
   end
@@ -123,8 +123,8 @@ GUI.New("PlaylistDelete", "Button", {
   col_txt = "elm_frame",
   col_fill = "wnd_bg",
   func = function()
-    selected = GUI.Val("PlaylistSelector")
-    handler_delete(selected)
+    local selected = GUI.Val("PlaylistSelector")
+    handler_playlist_delete(selected)
   end
 })
 
@@ -138,7 +138,7 @@ GUI.New("Items", "Listbox", {
   multi = false,
   caption = "Items ",
   font_a = 3,
-  font_b = 4,
+  font_b = 2,
   color = "txt",
   col_fill = "elm_fill",
   bg = "elm_bg",
@@ -146,6 +146,15 @@ GUI.New("Items", "Listbox", {
   shadow = true,
   pad = 4
 })
+function GUI.elms.Items:onmouseup()
+  GUI.Listbox.onmouseup(self)
+  local selected = GUI.Val("Items")
+  if selected then
+    GUI.elms.ItemDelete:enable()
+  else
+    GUI.elms.ItemDelete:disable()
+  end
+end
 
 GUI.New("ItemAdd", "Button", {
   z = 13,
@@ -157,7 +166,7 @@ GUI.New("ItemAdd", "Button", {
   font = 3,
   col_txt = "elm_frame",
   col_fill = "wnd_bg",
-  func = handler_add
+  func = handler_item_add
 })
 
 GUI.New("ItemDelete", "Button", {
@@ -169,7 +178,13 @@ GUI.New("ItemDelete", "Button", {
   caption = "Delete",
   font = 3,
   col_txt = "elm_frame",
-  col_fill = "wnd_bg"
+  col_fill = "wnd_bg",
+  func = function()
+    local selected = GUI.Val("Items")
+    if selected then
+      handler_item_delete(selected)
+    end
+  end
 })
 
 GUI.New("ItemUp", "Button", {
