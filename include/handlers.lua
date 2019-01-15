@@ -30,6 +30,7 @@ function handlers.playlist_select(selected)
         playlist_id = playlist_ids[selected]
       end
 
+      GUI.Val("PlaylistSelector", selected)
       GUI.elms.PlaylistDelete:enable()
       GUI.elms.ItemAdd:enable()
       GUI.elms.ItemDelete:disable()
