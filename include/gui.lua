@@ -46,6 +46,12 @@ function GUI.Button:disable()
   self:init()
   self:redraw()
 end
+function GUI.Listbox:enable()
+  GUI.elms_freeze[self.z] = false
+end
+function GUI.Listbox:disable()
+  GUI.elms_freeze[self.z] = true
+end
 
 -- And now, our actual GUI
 GUI.name = "Region Playlists"
@@ -129,7 +135,7 @@ GUI.New("PlaylistDelete", "Button", {
 })
 
 GUI.New("Items", "Listbox", {
-  z = 11,
+  z = 10,
   x = 98,
   y = 44,
   w = 350,
@@ -188,7 +194,7 @@ GUI.New("ItemDelete", "Button", {
 })
 
 GUI.New("ItemUp", "Button", {
-  z = 14,
+  z = 15,
   x = 466,
   y = 140,
   w = 24,
@@ -199,7 +205,7 @@ GUI.New("ItemUp", "Button", {
   col_fill = "wnd_bg"
 })
 GUI.New("ItemDown", "Button", {
-  z = 14,
+  z = 16,
   x = 466,
   y = 174,
   w = 24,

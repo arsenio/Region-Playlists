@@ -32,6 +32,26 @@ function util.split(s, delim)
   return result
 end
 
+function util.fill_table(val, count)
+  local list = {}
+  for i=1, count do
+    table.insert(list, val)
+  end
+  return list
+end
+
+function util.find(haystack, needle)
+  local winner = 0
+  for index,val in ipairs(haystack) do
+    if val == needle then
+      winner = index
+      break
+    end
+  end
+  return winner
+end
+
+
 function util.uuid()
     local random = math.random
 

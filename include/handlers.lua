@@ -14,6 +14,10 @@ ext = "Region Playlists"
 regions = {}
 
 function handlers.playlist_select(selected)
+  if util.is_empty(selected) then
+    return
+  end
+
   selected = tonumber(selected)
   playlist_id = nil
   reaper.SetProjExtState(project, ext, "selected", selected)
@@ -84,7 +88,7 @@ function handlers.playlist_delete(selected)
       reaper.SetProjExtState(project, ext, "playlists", "")
     end
 
---    reaper.SetProjExtState(project, ext, "selected", "")
+    reaper.SetProjExtState(project, ext, "selected", "")
     GUI.Val("PlaylistSelector", 1)
     update_playlists()
     update_items()
@@ -161,6 +165,7 @@ function handlers.item_delete(selected)
 end
 
 function handlers.play()
+  engaged = true
   play_state = reaper.GetPlayState()
   if play_state == 1 then -- "Playing"
     GUI.elms.Play.caption = "Play"
@@ -168,17 +173,81 @@ function handlers.play()
     return
   end
 
-  if play_state == 0 then -- "Stopped"
-    reaper.GoToRegion(project, 1, false)
+  if play_state == 2 then -- "Paused"
+    GUI.elms.Play.caption = "Play"
+    retval, str_value = reaper.GetProjExtState(project, ext, playlist_id .. "_items")
+    if not util.is_empty(str_value) then
+      local items = util.split(str_value, ",")
+      local place = 1
+      local selected = GUI.Val("Items")
+      if selected then
+        place = selected
+      end
+      if place + 1 <= #items then
+        place = place + 1
+        if items[place] == "P" then
+          reaper.CSurf_OnPause()
+          GUI.elms.Play.caption = "Play"
+        else
+          reaper.GoToRegion(project, items[place], false)
+          reaper.CSurf_OnPlay()
+          GUI.elms.Play.caption = "Pause"
+        end
+        bools = util.fill_table(false, #items)
+        bools[place] = true
+        selected = GUI.Val("Items", bools)
+      else
+        reaper.CSurf_OnStop()
+        engaged = false
+        bools = util.fill_table(false, #items)
+        selected = GUI.Val("Items", bools)
+      end
+    end
   end
 
-  GUI.elms.Play.caption = "Pause"
-  reaper.CSurf_OnPlay()
+  if play_state == 0 then -- "Stopped"
+    GUI.elms.Play.caption = "Pause"
+    retval, str_value = reaper.GetProjExtState(project, ext, playlist_id .. "_items")
+    if not util.is_empty(str_value) then
+      local items = util.split(str_value, ",")
+      local index = 1
+      local selected = GUI.Val("Items")
+      if selected then
+        index = selected
+      end
+      if items[index] == "P" then
+        reaper.CSurf_OnPause()
+        index = index + 1
+        if #items >= index then
+          reaper.GoToRegion(project, items[index], false)
+        end
+      else
+        reaper.GoToRegion(project, items[index], false)
+        reaper.CSurf_OnPlay()
+      end
+      bools = util.fill_table(false, #items)
+      bools[index] = true
+      selected = GUI.Val("Items", bools)
+      return
+    end
+  end
 end
 
 function handlers.stop()
+  engaged = false
   GUI.elms.Play.caption = "Play"
   reaper.CSurf_OnStop()
+
+  retval, str_value = reaper.GetProjExtState(project, ext, playlist_id .. "_items")
+  if not util.is_empty(str_value) then
+    local items = util.split(str_value, ",")
+    if items[1] ~= "P" then
+      reaper.GoToRegion(project, items[1], false)
+    end
+    bools = util.fill_table(false, #items)
+    selected = GUI.Val("Items", bools)
+    return
+  end
 end
 
 return handlers

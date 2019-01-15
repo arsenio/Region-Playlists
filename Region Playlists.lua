@@ -7,7 +7,11 @@ https://github.com/arsenio/Region-Playlists
 
 ext = "Region Playlists"
 regions = {}
-playlist_id = "foo"
+starts = {}
+stops = {}
+playlist_id = nil
+engaged = false
+crossfade = 0.10
 
 local root = ({reaper.get_action_context()})[2]:match("^(.*[/\\])")
 local util = require(root .. "include.util")
@@ -58,16 +62,6 @@ function update_playlists()
 
   retval, str_value = reaper.GetProjExtState(project, ext, "selected")
   handlers.playlist_select(str_value)
---[[
-  if util.is_empty(str_value) then
-    GUI.Val("PlaylistSelector", 1)
-    GUI.elms.PlaylistDelete:disable()
-  else
-    selected = tonumber(str_value)
-    GUI.Val("PlaylistSelector", selected)
-    GUI.elms.PlaylistDelete:enable()
-  end
---]]
   GUI.elms.PlaylistSelector:init()
   GUI.elms.PlaylistSelector:redraw()
 end
@@ -83,13 +77,15 @@ function update_items()
     items = util.split(str_value, ",")
   end
 
-  local regions = {}
+  regions = {}
   local marker_count = reaper.CountProjectMarkers(project)
   for index=0, marker_count - 1 do
     local retval, is_region, start, stop, name, region_id = reaper.EnumProjectMarkers(index)
     if is_region then
       name = util.trim(name:gsub(",", "，")) -- See comma comment in gui.lua
       regions[region_id] = name
+      starts[region_id] = start
+      stops[region_id] = stop
     end
   end
 
@@ -117,3 +113,68 @@ manager(handlers.playlist_select, handlers.playlist_new, handlers.playlist_delet
         handlers.play, handlers.stop)
 update_playlists()
 update_items()
+reaper.CSurf_OnStop()
+
+--[[
+poller() is the function that continuously checks the playhead, and moves
+it according to the playlist
+]]--
+local function poller()
+  play_state = reaper.GetPlayState()
+  if engaged then
+    GUI.elms.Items:disable()
+    -- If playing and engaged, find out if we're crossing a region stop
+    if play_state == 1 then -- "Playing"
+      local pos = reaper.GetPlayPosition()
+      local best_region = 0
+      for index,stop in pairs(stops) do
+        local start = starts[index]
+        local delta = stop - pos
+        if delta > 0 and delta <= crossfade then
+          best_region = index
+          break
+        end
+      end
+
+      -- If crossing a region stop, see if that region is in the playlist.
+      -- If so, jump to the next region in the playlist or stop.
+      if best_region ~= 0 then
+        retval, str_value = reaper.GetProjExtState(project, ext, playlist_id .. "_items")
+        local items = {}
+        if not util.is_empty(str_value) then
+          items = util.split(str_value, ",")
+          local place = util.find(items, tostring(best_region))
+          if place then
+            if place + 1 <= #items then
+              place = place + 1
+              if items[place] == "P" then
+                reaper.CSurf_OnPause()
+                GUI.elms.Play.caption = "Play"
+                GUI.elms.Play:redraw()
+              else
+                reaper.GoToRegion(project, items[place], false)
+                GUI.elms.Play.caption = "Pause"
+                GUI.elms.Play:redraw()
+              end
+              bools = util.fill_table(false, #items)
+              bools[place] = true
+              selected = GUI.Val("Items", bools)
+            else
+              reaper.CSurf_OnStop()
+              engaged = false
+              GUI.elms.Play.caption = "Play"
+              GUI.elms.Play:redraw()
+              bools = util.fill_table(false, #items)
+              selected = GUI.Val("Items", bools)
+            end
+          end
+        end
+      end
+    end
+  else
+    GUI.elms.Items:enable()
+  end
+end
+
+GUI.func = poller
+GUI.freq = 0
