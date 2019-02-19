@@ -96,6 +96,98 @@ function handlers.playlist_delete(selected)
   end
 end
 
+function handlers.item_select(selected)
+  if util.is_empty(selected) then
+    return
+  end
+
+  selected = tonumber(selected)
+  if selected then
+    GUI.elms.ItemDelete:enable()
+    list = GUI.elms.Items.list
+    if selected == 1 then
+      GUI.elms.ItemUp:disable()
+      GUI.elms.ItemDown:enable()
+    elseif selected == #list then
+      GUI.elms.ItemUp:enable()
+      GUI.elms.ItemDown:disable()
+    else
+      GUI.elms.ItemUp:enable()
+      GUI.elms.ItemDown:enable()
+    end
+    return
+  end
+
+  GUI.elms.ItemDelete:disable()
+  GUI.elms.ItemUp:disable()
+  GUI.elms.ItemDown:disable()
+end
+
+function handlers.item_up()
+  retval, str_value = reaper.GetProjExtState(project, ext, playlist_id .. "_items")
+  local items = {}
+  if not util.is_empty(str_value) then
+    items = util.split(str_value, ",")
+  end
+
+  local selected = GUI.Val("Items")
+  if selected > 1 then
+    local label = GUI.elms.Items.list[selected]
+    table.remove(GUI.elms.Items.list, selected)
+
+    local value = items[selected]
+    table.remove(items, selected)
+
+    selected = selected - 1
+    table.insert(GUI.elms.Items.list, selected, label)
+    table.insert(items, selected, value)
+    reaper.SetProjExtState(project, ext, playlist_id .. "_items", table.concat(items, ","))
+
+    handlers._items_reselect(selected)
+  end
+end
+
+function handlers.item_down()
+  retval, str_value = reaper.GetProjExtState(project, ext, playlist_id .. "_items")
+  local items = {}
+  if not util.is_empty(str_value) then
+    items = util.split(str_value, ",")
+  end
+
+  local selected = GUI.Val("Items")
+  if selected < #list then
+    local label = GUI.elms.Items.list[selected]
+    table.remove(GUI.elms.Items.list, selected)
+
+    local value = items[selected]
+    table.remove(items, selected)
+
+    selected = selected + 1
+    table.insert(GUI.elms.Items.list, selected, label)
+    table.insert(items, selected, value)
+    reaper.SetProjExtState(project, ext, playlist_id .. "_items", table.concat(items, ","))
+
+    handlers._items_reselect(selected)
+  end
+end
+
+function handlers._items_reselect(selected)
+  local new_selection = util.fill_table(false, #GUI.elms.Items.list)
+  new_selection[selected] = true
+  GUI.Val("Items", new_selection)
+
+  if selected == 1 then
+    GUI.elms.ItemUp:disable()
+    GUI.elms.ItemDown:enable()
+  elseif selected == #GUI.elms.Items.list then
+    GUI.elms.ItemUp:enable()
+    GUI.elms.ItemDown:disable()
+  else
+    GUI.elms.ItemUp:enable()
+    GUI.elms.ItemDown:enable()
+  end
+end
+
 function handlers.item_add()
   local options = "Add a pause|"
   local regions = {}

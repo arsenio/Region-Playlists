@@ -16,10 +16,7 @@ if not lib_path or lib_path == "" then
 end
 loadfile(lib_path .. "Core.lua")()
 
-local handler_playlist_select, handler_playlist_new, handler_playlist_delete,
-      handler_item_add, handler_item_delete,
-      handler_play, handler_stop = ...
-
+local handlers = ...
 
 GUI.req("Classes/Class - Menubox.lua")()
 GUI.req("Classes/Class - Button.lua")()
@@ -87,7 +84,7 @@ function GUI.elms.PlaylistSelector:onmouseup()
     else
       GUI.elms.PlaylistDelete:enable()
     end
-    handler_playlist_select(selected)
+    handlers.playlist_select(selected)
   end
 end
 
@@ -112,7 +109,7 @@ GUI.New("PlaylistNew", "Button", {
       ]]--
       name = util.trim(name:gsub(",", "，"))
       if not util.is_empty(name) then
-        handler_playlist_new(name)
+        handlers.playlist_new(name)
       end
     end
   end
@@ -130,7 +127,7 @@ GUI.New("PlaylistDelete", "Button", {
   col_fill = "wnd_bg",
   func = function()
     local selected = GUI.Val("PlaylistSelector")
-    handler_playlist_delete(selected)
+    handlers.playlist_delete(selected)
   end
 })
 
@@ -156,9 +153,7 @@ function GUI.elms.Items:onmouseup()
   GUI.Listbox.onmouseup(self)
   local selected = GUI.Val("Items")
   if selected then
-    GUI.elms.ItemDelete:enable()
-  else
-    GUI.elms.ItemDelete:disable()
+    handlers.item_select(selected)
   end
 end
 
@@ -172,7 +167,7 @@ GUI.New("ItemAdd", "Button", {
   font = 3,
   col_txt = "elm_frame",
   col_fill = "wnd_bg",
-  func = handler_item_add
+  func = handlers.item_add
 })
 
 GUI.New("ItemDelete", "Button", {
@@ -188,7 +183,7 @@ GUI.New("ItemDelete", "Button", {
   func = function()
     local selected = GUI.Val("Items")
     if selected then
-      handler_item_delete(selected)
+      handlers.item_delete(selected)
     end
   end
 })
@@ -202,8 +197,10 @@ GUI.New("ItemUp", "Button", {
   caption = "↑",
   font = 3,
   col_txt = "elm_frame",
-  col_fill = "wnd_bg"
+  col_fill = "wnd_bg",
+  func = handlers.item_up
 })
+
 GUI.New("ItemDown", "Button", {
   z = 16,
   x = 466,
@@ -213,7 +210,8 @@ GUI.New("ItemDown", "Button", {
   caption = "↓",
   font = 3,
   col_txt = "elm_frame",
-  col_fill = "wnd_bg"
+  col_fill = "wnd_bg",
+  func = handlers.item_down
 })
 
 GUI.New("Play", "Button", {
@@ -226,7 +224,7 @@ GUI.New("Play", "Button", {
   font = 2,
   col_txt = "txt",
   col_fill = "elm_frame",
-  func = handler_play
+  func = handlers.play
 })
 
 GUI.New("Stop", "Button", {
@@ -239,7 +237,7 @@ GUI.New("Stop", "Button", {
   font = 2,
   col_txt = "txt",
   col_fill = "elm_frame",
-  func = handler_stop
+  func = handlers.stop
 })
 
 GUI.Init()

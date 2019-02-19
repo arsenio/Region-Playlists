@@ -108,9 +108,7 @@ function update_items()
 end
 
 local manager = assert(loadfile(root .. "include/gui.lua"))
-manager(handlers.playlist_select, handlers.playlist_new, handlers.playlist_delete,
-        handlers.item_add, handlers.item_delete,
-        handlers.play, handlers.stop)
+manager(handlers)
 update_playlists()
 update_items()
 reaper.CSurf_OnStop()
