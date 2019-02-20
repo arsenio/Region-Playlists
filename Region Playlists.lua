@@ -144,15 +144,31 @@ local function poller()
           local place = util.find(items, tostring(best_region))
           if place then
             if place + 1 <= #items then
-              place = place + 1
-              if items[place] == "P" then
-                reaper.CSurf_OnPause()
-                GUI.elms.Play.caption = "Play"
-                GUI.elms.Play:redraw()
-              else
-                reaper.GoToRegion(project, items[place], false)
-                GUI.elms.Play.caption = "Pause"
-                GUI.elms.Play:redraw()
+              is_ready = false
+              -- Iterating over the place var allows for multiple pauses
+              -- in a row (not that you'd want to do that for any earthly
+              -- reason). It also makes pause act like ffwd-and-pause.
+              while not is_ready do
+                place = place + 1
+                if place <= #items then
+                  if items[place] == "P" then
+                    if reaper.GetPlayState() == 1 then
+                      reaper.CSurf_OnPause()
+                      GUI.elms.Play.caption = "Play"
+                      GUI.elms.Play:redraw()
+                    end
+                  else
+                    reaper.GoToRegion(project, items[place], false)
+                    if reaper.GetPlayState() ~= 2 then
+                      GUI.elms.Play.caption = "Pause"
+                      GUI.elms.Play:redraw()
+                    end
+                    is_ready = true
+                  end
+                else
+                  place = #items
+                  is_ready = true
+                end
               end
               bools = util.fill_table(false, #items)
               bools[place] = true

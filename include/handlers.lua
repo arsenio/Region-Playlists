@@ -276,19 +276,9 @@ function handlers.play()
       if selected then
         place = selected
       end
-      if place + 1 <= #items then
-        place = place + 1
-        if items[place] == "P" then
-          reaper.CSurf_OnPause()
-          GUI.elms.Play.caption = "Play"
-        else
-          reaper.GoToRegion(project, items[place], false)
-          reaper.CSurf_OnPlay()
-          GUI.elms.Play.caption = "Pause"
-        end
-        bools = util.fill_table(false, #items)
-        bools[place] = true
-        selected = GUI.Val("Items", bools)
+      if place <= #items then
+        reaper.CSurf_OnPlay()
+        GUI.elms.Play.caption = "Pause"
       else
         reaper.CSurf_OnStop()
         engaged = false
